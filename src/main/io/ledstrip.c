@@ -462,7 +462,11 @@ static void applyLedFixedLayers(void)
                 break;
 
             case LED_FUNCTION_ARM_STATE:
-                color = ARMING_FLAG(ARMED) ? *getSC(LED_SCOLOR_ARMED) : *getSC(LED_SCOLOR_DISARMED);
+                if (ledGetOverlayBit(ledConfig, LED_OVERLAY_BLINK)) {
+                    color = ARMING_FLAG(ARMED) ? ledStripConfig()->colors[ledGetColor(ledConfig)] : HSV(BLACK);
+                } else {
+                    color = ARMING_FLAG(ARMED) ? *getSC(LED_SCOLOR_ARMED) : *getSC(LED_SCOLOR_DISARMED);
+                }
                 break;
 
             case LED_FUNCTION_BATTERY:
@@ -864,7 +868,11 @@ static void applyLedBlinkLayer(bool updateNow, timeUs_t *timer)
                 setLedHsv(i, getSC(LED_SCOLOR_STROBE));
             }
         } else {
-            if (ledGetOverlayBit(ledConfig, LED_OVERLAY_BLINK) ||
+            if (ledGetOverlayBit(ledConfig, LED_OVERLAY_BLINK) && ledGetFunction(ledConfig) == LED_FUNCTION_ARM_STATE) {
+                if (ARMING_FLAG(ARMED)) {
+                    setLedHsv(i, &HSV(BLACK));
+                }
+            } else if (ledGetOverlayBit(ledConfig, LED_OVERLAY_BLINK) ||
                     (ledGetOverlayBit(ledConfig, LED_OVERLAY_LANDING_FLASH) && scaledThrottle < 55 && scaledThrottle > 10)) {
                 setLedHsv(i, getSC(LED_SCOLOR_BLINKBACKGROUND));
             }
